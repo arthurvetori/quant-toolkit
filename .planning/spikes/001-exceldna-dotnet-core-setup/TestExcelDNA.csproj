@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ExcelDNA for .NET Core support -->
+    <PackageReference Include="ExcelDna.Integration" Version="1.5.1" />
+    <PackageReference Include="ExcelDna.Registration" Version="1.6.0" />
+  </ItemGroup>
+
+</Project>
