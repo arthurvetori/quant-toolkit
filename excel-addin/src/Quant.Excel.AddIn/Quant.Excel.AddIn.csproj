@@ -4,6 +4,7 @@
     <ExcelDnaCreate32BitAddIn>false</ExcelDnaCreate32BitAddIn>
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <ExcelAddInExplicitExports>true</ExcelAddInExplicitExports>
+    <ExcelAddInInclude>NQuantLibc.dll</ExcelAddInInclude>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ExcelDna.AddIn" />
