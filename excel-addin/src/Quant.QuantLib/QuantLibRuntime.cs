@@ -1,4 +1,5 @@
 using Quant.Core.Calendars;
+using Quant.Core.DayCounters;
 using Quant.QuantLib.Calendars;
 using Quant.QuantLib.DayCounters;
 
@@ -13,9 +14,15 @@ public sealed class QuantLibRuntime : IDisposable
         Calendars = new CalendarCatalog();
         DayCounters = new DayCounterCatalog(Calendars);
         Calendar = new QuantLibCalendarService(Calendars);
+        DayCount = new QuantLibDayCountService(DayCounters);
+        Schedule = new QuantLibScheduleService(Calendars);
     }
 
     public ICalendarService Calendar { get; }
+
+    public IDayCountService DayCount { get; }
+
+    public IScheduleService Schedule { get; }
 
     internal CalendarCatalog Calendars { get; }
 
