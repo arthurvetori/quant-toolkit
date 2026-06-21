@@ -18,4 +18,17 @@ internal static class ExcelTableConverter
 
         return result;
     }
+
+    internal static object[,] FromDates(IReadOnlyList<DateOnly> dates)
+    {
+        ArgumentNullException.ThrowIfNull(dates);
+        var result = new object[dates.Count, 1];
+
+        for (var row = 0; row < dates.Count; row++)
+        {
+            result[row, 0] = ExcelDateConverter.ToDateTime(dates[row]);
+        }
+
+        return result;
+    }
 }
