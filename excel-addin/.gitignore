@@ -1,1 +1,5 @@
 .worktrees/
+bin/
+obj/
+.vs/
+TestResults/
