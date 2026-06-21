@@ -10,7 +10,9 @@ $quantLibRoot = Join-Path $repoRoot 'external\QuantLib'
 $swigRoot = Join-Path $repoRoot 'external\QuantLib-SWIG'
 $quantLibSolution = Join-Path $quantLibRoot 'QuantLib.sln'
 $swigSolution = Join-Path $swigRoot 'CSharp\QuantLib.sln'
+$nativeProject = Join-Path $swigRoot 'CSharp\cpp\QuantLibWrapper.vcxproj'
 $managedProject = Join-Path $swigRoot 'CSharp\csharp\NQuantLib.csproj'
+$wrapperSource = Join-Path $swigRoot 'CSharp\cpp\quantlib_wrap.cpp'
 $nativeBuildDll = Join-Path $swigRoot 'CSharp\cpp\bin\x64\Release\NQuantLibc.dll'
 $nativeDll = Join-Path $swigRoot 'CSharp\cpp\NQuantLibc.dll'
 $quantLibLibrary = Join-Path $quantLibRoot 'lib\QuantLib-x64-mt.lib'
@@ -55,6 +57,25 @@ Assert-Path -Path $quantLibSolution -Description 'QuantLib submodule'
 Assert-Path -Path $swigSolution -Description 'QuantLib-SWIG submodule'
 Assert-Path -Path $managedProject -Description 'Official NQuantLib managed project'
 
+if (-not $env:BOOST_ROOT) {
+    throw 'BOOST_ROOT must point to a Boost source tree containing boost\config.hpp.'
+}
+
+$boostRoot = [IO.Path]::GetFullPath($env:BOOST_ROOT)
+$boostConfig = Join-Path $boostRoot 'boost\config.hpp'
+if (-not (Test-Path -LiteralPath $boostConfig)) {
+    throw ('BOOST_ROOT must point to a Boost source tree containing boost\config.hpp. Received: ' + $boostRoot)
+}
+
+if (-not $env:SWIG_EXE) {
+    throw 'SWIG_EXE must point to swig.exe.'
+}
+
+$swigExe = [IO.Path]::GetFullPath($env:SWIG_EXE)
+if (-not (Test-Path -LiteralPath $swigExe)) {
+    throw ('SWIG_EXE must point to swig.exe. Received: ' + $swigExe)
+}
+
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'Git is required to verify the pinned native dependencies.'
 }
@@ -88,26 +109,47 @@ if ($LASTEXITCODE -ne 0 -or -not $dotnetVersion.StartsWith('8.')) {
     throw ('The repository requires a .NET 8 SDK; dotnet selected ' + $dotnetVersion + '.')
 }
 
-Write-Host 'Building official QuantLib v1.42.1 (Release|x64)...'
-& $msbuild $quantLibSolution /m /nologo /p:Configuration=Release /p:Platform=x64
-if ($LASTEXITCODE -ne 0) {
-    throw 'QuantLib x64 build failed.'
-}
-Assert-Path -Path $quantLibLibrary -Description 'QuantLib Release x64 library'
+$previousCl = $env:CL
+try {
+    $env:CL = ('/I"' + $boostRoot + '" /wd4996 ' + $previousCl).Trim()
 
-$env:QL_DIR = $quantLibRoot
-Write-Host 'Building official QuantLib-SWIG v1.42.1 (Release|x64)...'
-& $msbuild $swigSolution /m /nologo /p:Configuration=Release /p:Platform=x64 /p:TargetFrameworks=net8.0
-if ($LASTEXITCODE -ne 0) {
-    throw 'QuantLib-SWIG x64 build failed.'
-}
-Assert-Path -Path $nativeBuildDll -Description 'Official QuantLib-SWIG Release x64 build output'
-Assert-Path -Path $nativeDll -Description 'Official QuantLib-SWIG x64 post-build copy'
+    Write-Host 'Building official QuantLib v1.42.1 (Release|x64)...'
+    & $msbuild $quantLibSolution /m /nologo /p:Configuration=Release /p:Platform=x64
+    if ($LASTEXITCODE -ne 0) {
+        throw 'QuantLib x64 build failed.'
+    }
+    Assert-Path -Path $quantLibLibrary -Description 'QuantLib Release x64 library'
 
-Write-Host 'Building official NQuantLib managed binding (Release|net8.0)...'
-& dotnet build $managedProject -c Release -f net8.0 --nologo
-if ($LASTEXITCODE -ne 0) {
-    throw 'NQuantLib managed build failed.'
-}
+    Write-Host 'Generating official QuantLib-SWIG C# bindings...'
+    Push-Location (Join-Path $swigRoot 'CSharp')
+    try {
+        & $swigExe -csharp -c++ -outdir csharp -namespace QuantLib -o cpp\quantlib_wrap.cpp ..\SWIG\quantlib.i
+        if ($LASTEXITCODE -ne 0) {
+            throw 'QuantLib-SWIG source generation failed.'
+        }
+    }
+    finally {
+        Pop-Location
+    }
+    Assert-Path -Path $wrapperSource -Description 'Generated QuantLib-SWIG wrapper source'
 
-Write-Host ('Native build complete: ' + $nativeDll)
+    $env:QL_DIR = $quantLibRoot
+    Write-Host 'Building official QuantLib-SWIG v1.42.1 wrapper (Release|x64)...'
+    & $msbuild $nativeProject /m /nologo /p:Configuration=Release /p:Platform=x64
+    if ($LASTEXITCODE -ne 0) {
+        throw 'QuantLib-SWIG x64 build failed.'
+    }
+    Assert-Path -Path $nativeBuildDll -Description 'Official QuantLib-SWIG Release x64 build output'
+    Assert-Path -Path $nativeDll -Description 'Official QuantLib-SWIG x64 post-build copy'
+
+    Write-Host 'Building official NQuantLib managed binding (Release|net8.0)...'
+    & dotnet build $managedProject -c Release -f net8.0 --nologo
+    if ($LASTEXITCODE -ne 0) {
+        throw 'NQuantLib managed build failed.'
+    }
+
+    Write-Host ('Native build complete: ' + $nativeDll)
+}
+finally {
+    $env:CL = $previousCl
+}

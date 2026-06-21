@@ -13,8 +13,10 @@ QLNet is not used. The supported native architecture is x64 only.
 - Visual Studio 2022 or Visual Studio 2022 Build Tools with the **Desktop development with C++** workload. Include the MSVC v143 x64/x86 build tools and a Windows SDK. The build script locates this installation with `vswhere.exe` and rejects installations without the x64 compiler component.
 - .NET 8 SDK. `global.json` selects .NET 8, and the managed `Quant.QuantLib` and test projects target `net8.0`.
 - Git, including submodule support.
+- Boost source headers. Set `BOOST_ROOT` to the extracted source directory containing `boost\config.hpp`. Boost 1.86.0 is the verified version.
+- SWIG for Windows. Set `SWIG_EXE` to `swig.exe`. SWIG 4.2.1 is the verified version.
 
-The SWIG-generated C++ and C# sources are committed in the official QuantLib-SWIG `v1.42.1` submodule, so a separate SWIG executable is not required for this build.
+The official QuantLib-SWIG `v1.42.1` submodule contains the interface definitions, but not generated C++ and C# bindings. The build script runs the pinned SWIG executable before compiling the wrapper.
 
 ## Initialize the pinned sources
 
@@ -33,6 +35,8 @@ Both tag checks must print `v1.42.1`. The build script also verifies the exact p
 Run from `excel-addin`:
 
 ```powershell
+$env:BOOST_ROOT = 'C:\path\to\boost_1_86_0'
+$env:SWIG_EXE = 'C:\path\to\swigwin-4.2.1\swig.exe'
 .\eng\build-native.ps1
 dotnet test .\tests\Quant.QuantLib.Tests\Quant.QuantLib.Tests.csproj -c Release --nologo
 ```
@@ -40,10 +44,11 @@ dotnet test .\tests\Quant.QuantLib.Tests\Quant.QuantLib.Tests.csproj -c Release 
 The script performs these builds in order:
 
 1. `external\QuantLib\QuantLib.sln`, `Release|x64`, with Visual Studio 2022 MSBuild.
-2. `external\QuantLib-SWIG\CSharp\QuantLib.sln`, `Release|x64`, with `QL_DIR` set to the pinned QuantLib submodule and managed targets constrained to `net8.0`.
-3. `external\QuantLib-SWIG\CSharp\csharp\NQuantLib.csproj`, `Release|net8.0`, with the .NET SDK.
+2. QuantLib-SWIG C++ and C# source generation from `SWIG\quantlib.i`.
+3. `external\QuantLib-SWIG\CSharp\cpp\QuantLibWrapper.vcxproj`, `Release|x64`, with `QL_DIR` set to the pinned QuantLib submodule.
+4. `external\QuantLib-SWIG\CSharp\csharp\NQuantLib.csproj`, `Release|net8.0`, with the .NET SDK.
 
-The repository-level `Directory.Build.targets` constrains the official multi-target `NQuantLib` project to `net8.0` when it is consumed by this .NET 8 solution. The official generated source remains unchanged.
+The repository-level `Directory.Build.targets` constrains the official multi-target `NQuantLib` project to `net8.0` and suppresses the known `CS0108` warning in generated upstream code. All projects continue to treat other warnings as errors. The official generated source remains unchanged.
 
 ## Expected outputs
 
