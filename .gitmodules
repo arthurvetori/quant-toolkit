@@ -1,0 +1,6 @@
+[submodule "excel-addin/external/QuantLib"]
+	path = excel-addin/external/QuantLib
+	url = https://github.com/lballabio/QuantLib.git
+[submodule "excel-addin/external/QuantLib-SWIG"]
+	path = excel-addin/external/QuantLib-SWIG
+	url = https://github.com/lballabio/QuantLib-SWIG.git
