@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Quant.Core/Quant.Core.csproj" />
+    <ProjectReference Include="../../external/QuantLib-SWIG/CSharp/csharp/NQuantLib.csproj" />
+    <None Include="../../external/QuantLib-SWIG/CSharp/cpp/NQuantLibc.dll"
+          Link="NQuantLibc.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

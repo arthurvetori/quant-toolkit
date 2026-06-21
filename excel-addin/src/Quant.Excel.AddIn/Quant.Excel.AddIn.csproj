@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ExcelDnaCreate32BitAddIn>false</ExcelDnaCreate32BitAddIn>
+    <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
+    <ExcelAddInExplicitExports>true</ExcelAddInExplicitExports>
+    <ExcelAddInInclude>NQuantLibc.dll</ExcelAddInInclude>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ExcelDna.AddIn" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Quant.Core/Quant.Core.csproj" />
+    <ProjectReference Include="../Quant.QuantLib/Quant.QuantLib.csproj" />
+    <ProjectReference Include="../Quant.Infrastructure/Quant.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

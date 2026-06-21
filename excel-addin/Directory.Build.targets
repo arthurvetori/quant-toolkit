@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'NQuantLib'">
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);CS0108</NoWarn>
+  </PropertyGroup>
+</Project>
