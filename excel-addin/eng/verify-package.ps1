@@ -5,10 +5,16 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
+$solution = Join-Path $repoRoot 'Quant.sln'
 $project = Join-Path $repoRoot 'src\Quant.Excel.AddIn\Quant.Excel.AddIn.csproj'
 $releaseRoot = Join-Path $repoRoot 'src\Quant.Excel.AddIn\bin\Release'
 
-& dotnet build $project -c Release --nologo
+& dotnet test $solution -c Release --nologo '-m:1' '/p:UseSharedCompilation=false'
+if ($LASTEXITCODE -ne 0) {
+    throw 'Release test suite or approved Excel registration inspection failed.'
+}
+
+& dotnet build $project -c Release --nologo '-m:1' '/p:UseSharedCompilation=false'
 if ($LASTEXITCODE -ne 0) {
     throw 'Excel add-in build failed.'
 }
@@ -46,3 +52,4 @@ foreach ($packedXll in $packedXlls) {
 Write-Host ('Verified x64 XLL: ' + ($x64Xlls.FullName -join ', '))
 Write-Host ('Verified native wrapper: ' + ($nativeDlls.FullName -join ', '))
 Write-Host ('Verified packed QuantLib resources: ' + ($packedXlls.FullName -join ', '))
+Write-Host 'Verified full Release test suite and exactly 17 approved Excel registrations.'

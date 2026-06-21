@@ -24,7 +24,7 @@ The verifier rejects 32-bit XLL output and inspects the packed XLL for both mana
 4. Select **Browse**, choose `Quant.Excel.AddIn-AddIn64-packed.xll`, and select **OK**.
 5. Confirm the add-in remains checked in the **Add-ins available** list.
 
-A successful load produces no error dialog. Worksheet functions are introduced by the calendar and day-count implementation plan; this foundation artifact only verifies loading and lifecycle integration.
+A successful load produces no error dialog. Enter `=bCalendars()` in an empty cell to confirm registration and display the available calendar codes.
 
 ## Troubleshooting
 

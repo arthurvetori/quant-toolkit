@@ -16,4 +16,12 @@ The distributable artifact is:
 
 `src\Quant.Excel.AddIn\bin\Release\net8.0-windows\publish\Quant.Excel.AddIn-AddIn64-packed.xll`
 
-See [loading the add-in](docs/functions/loading-the-add-in.md) for Excel installation and troubleshooting steps. Calendar and day-count worksheet functions are implemented in the next development phase.
+Start with the [calendar and day-count quick start](docs/functions/quick-start.md), or use these focused references:
+
+- [Loading the add-in](docs/functions/loading-the-add-in.md)
+- [Financial convention codes](docs/functions/codes.md)
+- [Calendar functions](docs/functions/calendars.md)
+- [Day-count functions](docs/functions/day-counters.md)
+- [Schedule function](docs/functions/schedules.md)
+- [Calendar and day-count performance](docs/performance/calendar-daycount.md)
+- [Windows x64 native build guide](docs/native-build/windows-x64.md)
