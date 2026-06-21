@@ -6,9 +6,11 @@ public sealed class AddInLifecycle : IExcelAddIn
 {
     public void AutoOpen()
     {
+        AddInServices.Initialize();
     }
 
     public void AutoClose()
     {
+        AddInServices.Reset();
     }
 }
