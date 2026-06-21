@@ -55,3 +55,6 @@ obj/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Superpowers task execution scratch state
+.superpowers/
