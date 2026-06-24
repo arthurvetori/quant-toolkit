@@ -1,10 +1,13 @@
+using System.Runtime.CompilerServices;
 using ExcelDna.Integration;
+using Quant.Core.Diagnostics;
+using Quant.Excel.AddIn.Diagnostics;
 
 namespace Quant.Excel.AddIn.Errors;
 
 internal static class ExcelCall
 {
-    internal static object Execute(Func<object> calculation)
+    internal static object Execute(Func<object> calculation, [CallerMemberName] string functionName = "")
     {
         ArgumentNullException.ThrowIfNull(calculation);
 
@@ -20,8 +23,14 @@ internal static class ExcelCall
         {
             return ExcelError.ExcelErrorValue;
         }
-        catch
+        catch (Exception exception)
         {
+            var sink = DiagnosticManager.Current;
+            if (sink.IsEnabled)
+            {
+                sink.TryWrite(DiagnosticEvent.Error(functionName, $"{exception.GetType().Name}: {exception.Message}", exception.StackTrace));
+            }
+
             return ExcelError.ExcelErrorValue;
         }
     }
