@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quant.QuantLib.Tests", "tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quant.Excel.AddIn.Tests", "tests\Quant.Excel.AddIn.Tests\Quant.Excel.AddIn.Tests.csproj", "{DE251B06-051B-483E-AEEB-C7E68C45CED6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quant.Infrastructure.Tests", "tests\Quant.Infrastructure.Tests\Quant.Infrastructure.Tests.csproj", "{91782954-4D93-4752-BC47-9058AFF998A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{DE251B06-051B-483E-AEEB-C7E68C45CED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE251B06-051B-483E-AEEB-C7E68C45CED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE251B06-051B-483E-AEEB-C7E68C45CED6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91782954-4D93-4752-BC47-9058AFF998A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91782954-4D93-4752-BC47-9058AFF998A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91782954-4D93-4752-BC47-9058AFF998A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91782954-4D93-4752-BC47-9058AFF998A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{152A8F69-4C62-412E-860B-73EA107E2A06} = {93DC3A2A-E064-4285-83CF-2EDC43020E8E}
@@ -67,5 +73,6 @@ Global
 		{4D62DB60-4C04-4855-81C0-48809361F27F} = {69E1614B-F99D-4E7D-BD5C-FB127A077C8B}
 		{F786DC9A-8C93-4065-9974-713FD50DC3F2} = {69E1614B-F99D-4E7D-BD5C-FB127A077C8B}
 		{DE251B06-051B-483E-AEEB-C7E68C45CED6} = {69E1614B-F99D-4E7D-BD5C-FB127A077C8B}
+		{91782954-4D93-4752-BC47-9058AFF998A2} = {69E1614B-F99D-4E7D-BD5C-FB127A077C8B}
 	EndGlobalSection
 EndGlobal
