@@ -85,9 +85,19 @@ public sealed class AsyncFileDiagnosticSink : IDiagnosticSink, IAsyncDisposable
 
         if (_channel.Writer.TryWrite(diagnosticEvent))
         {
+            if (_duplicateWindow > TimeSpan.Zero)
+            {
+                RecordAccepted(diagnosticEvent);
+            }
+
             return true;
         }
 
+        // The channel write failed (queue full): this event is dropped, so it must not be
+        // treated as a successfully-accepted occurrence for dedup purposes. Do NOT record a
+        // dedup timestamp here — doing so would "poison" the dedup window for this key, causing
+        // a later genuinely-new occurrence to be silently suppressed as a duplicate of an event
+        // that was never actually written anywhere.
         Interlocked.Increment(ref _droppedEvents);
         return false;
     }
@@ -97,14 +107,38 @@ public sealed class AsyncFileDiagnosticSink : IDiagnosticSink, IAsyncDisposable
         var key = (diagnosticEvent.Source, diagnosticEvent.Message);
         var now = diagnosticEvent.Timestamp;
 
+        // Only the timestamp of the most recently *successfully enqueued* occurrence is
+        // recorded (see TryWrite). A failed channel write for a non-duplicate event leaves this
+        // dictionary untouched, so the next attempt for the same key is still evaluated against
+        // the last accepted timestamp (or no record at all if there never was one).
         if (_recentEvents.TryGetValue(key, out var lastSeen) && now - lastSeen < _duplicateWindow)
         {
             return true;
         }
 
-        _recentEvents[key] = now;
         return false;
     }
+
+    private void RecordAccepted(in DiagnosticEvent diagnosticEvent)
+    {
+        var key = (diagnosticEvent.Source, diagnosticEvent.Message);
+        _recentEvents[key] = diagnosticEvent.Timestamp;
+    }
+
+    /// <summary>
+    /// Test-only accessor for the dedup index, used to assert that a dropped (queue-full) write
+    /// never records a dedup timestamp. Not part of the public contract.
+    /// </summary>
+    internal bool TryGetRecordedDedupTimestamp(string source, string message, out DateTimeOffset timestamp) =>
+        _recentEvents.TryGetValue((source, message), out timestamp);
+
+    /// <summary>
+    /// Test-only helper that drains a single buffered event directly from the channel without
+    /// requiring a running background worker. Used to free up queue capacity deterministically
+    /// in tests that exercise the queue-full path with <c>startWorker: false</c>. Not part of
+    /// the public contract.
+    /// </summary>
+    internal bool TryDrainOne(out DiagnosticEvent diagnosticEvent) => _channel.Reader.TryRead(out diagnosticEvent);
 
     private async Task RunWorkerAsync()
     {
@@ -172,6 +206,17 @@ public sealed class AsyncFileDiagnosticSink : IDiagnosticSink, IAsyncDisposable
     /// Stops accepting new events, completes the channel, and waits up to <paramref name="timeout"/>
     /// for the background worker to drain and flush any buffered events. Safe to call more than once.
     /// </summary>
+    /// <remarks>
+    /// This method honors a hard time bound: it never blocks longer than <paramref name="timeout"/>.
+    /// If the worker has not finished draining/flushing by the time <paramref name="timeout"/>
+    /// elapses, <see cref="StopAsync"/> returns anyway and the worker keeps running in the
+    /// background ("abandoned" from the caller's point of view). Callers must NOT assume the log
+    /// directory or log file is safe to delete or move immediately after a timed-out
+    /// <see cref="StopAsync"/> call returns — the abandoned worker may still be writing to or
+    /// flushing the file. Any exception the worker raises after the timeout is observed via a
+    /// fire-and-forget continuation so it does not surface as an unobserved task exception, but
+    /// it is not (and cannot be, without violating the time bound) propagated to this call.
+    /// </remarks>
     public async Task StopAsync(TimeSpan timeout)
     {
         if (Interlocked.Exchange(ref _stopped, 1) != 0)
@@ -189,6 +234,16 @@ public sealed class AsyncFileDiagnosticSink : IDiagnosticSink, IAsyncDisposable
         var completed = await Task.WhenAny(_workerTask, Task.Delay(timeout)).ConfigureAwait(false);
         if (completed != _workerTask)
         {
+            // Timeout won the race: the worker is left running in the background. Attach a
+            // continuation so that if it later faults, the exception is observed here instead of
+            // becoming an unobserved task exception (which would otherwise crash the process on
+            // finalization in older runtimes, and is always a diagnostics smell). This does not
+            // and must not block this call any further than the timeout already has.
+            _ = _workerTask.ContinueWith(
+                static t => _ = t.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
             return;
         }
 
