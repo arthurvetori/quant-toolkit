@@ -205,4 +205,52 @@ public sealed class AsyncFileDiagnosticSinkTests
         // (which could otherwise manifest as a flaky IOException on Windows).
         await Task.Delay(TimeSpan.FromMilliseconds(500));
     }
+
+    [Fact]
+    public async Task ProducerLoopUnderHighVolumeNeverBlocksAndShutdownStaysWithinTimeout()
+    {
+        // Deterministic load scenario: enqueue 100,000 synthetic errors into a small,
+        // capacity-256 sink while the background worker is paused (startWorker: false), so
+        // every write past the first 256 is guaranteed to hit the full-queue path and be
+        // dropped rather than ever awaiting or blocking. This guards two things at once:
+        //   1. The producer loop (TryWrite) is synchronous end-to-end at high volume -- no
+        //      await, no lock contention severe enough to stall the loop for any meaningful
+        //      time -- which we assert indirectly via wall-clock time for the whole loop.
+        //   2. DroppedEvents reflects the guaranteed overflow (100,000 - 256 writes accepted).
+        // StopAsync is then exercised with a real timeout and must return within that bound.
+        const int totalEvents = 100_000;
+        const int capacity = 256;
+
+        using var directory = new TemporaryDirectory();
+        await using var sink = AsyncFileDiagnosticSink.Start(
+            directory.Path,
+            capacity: capacity,
+            duplicateWindow: TimeSpan.Zero,
+            startWorker: false);
+
+        var elapsed = Stopwatch.StartNew();
+        for (var i = 0; i < totalEvents; i++)
+        {
+            sink.TryWrite(DiagnosticEvent.Error($"bLoad{i}", "failure", null));
+        }
+        elapsed.Stop();
+
+        // 100,000 non-blocking, in-memory channel writes against a paused worker should
+        // complete in well under a second on any reasonable machine; this is a generous bound
+        // intended to catch an accidental await/block, not to be a tight perf assertion.
+        Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(5),
+            $"Producer loop should never block; took {elapsed.Elapsed} for {totalEvents} writes.");
+
+        Assert.True(sink.Status.DroppedEvents > 0,
+            "Capacity-256 sink fed 100,000 events while paused must drop the overflow.");
+        Assert.Equal(totalEvents - capacity, sink.Status.DroppedEvents);
+
+        var shutdownTimeout = TimeSpan.FromSeconds(2);
+        var shutdownElapsed = Stopwatch.StartNew();
+        await sink.StopAsync(shutdownTimeout);
+        shutdownElapsed.Stop();
+
+        Assert.True(shutdownElapsed.Elapsed <= shutdownTimeout + TimeSpan.FromSeconds(1),
+            $"StopAsync should remain within its configured timeout bound; took {shutdownElapsed.Elapsed}.");
+    }
 }

@@ -23,5 +23,7 @@ Start with the [calendar and day-count quick start](docs/functions/quick-start.m
 - [Calendar functions](docs/functions/calendars.md)
 - [Day-count functions](docs/functions/day-counters.md)
 - [Schedule function](docs/functions/schedules.md)
+- [Diagnostics functions](docs/functions/diagnostics.md)
 - [Calendar and day-count performance](docs/performance/calendar-daycount.md)
+- [Diagnostics performance](docs/performance/diagnostics.md)
 - [Windows x64 native build guide](docs/native-build/windows-x64.md)
