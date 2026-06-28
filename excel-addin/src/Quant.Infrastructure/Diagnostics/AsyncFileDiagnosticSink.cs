@@ -66,6 +66,10 @@ public sealed class AsyncFileDiagnosticSink : IDiagnosticSink, IAsyncDisposable
 
     public bool IsEnabled => _stopped == 0;
 
+    // "Stopped" is this sink's own post-stop state for direct consumers/tests. In production,
+    // DiagnosticManager.Stop() always discards a stopped sink and routes Current to
+    // NullDiagnosticSink (Status "Disabled"), so "Stopped" is never observable via
+    // bLoggingStatus().
     public DiagnosticStatus Status => new(
         IsEnabled,
         IsEnabled ? "Enabled" : "Stopped",

@@ -34,7 +34,7 @@ Returns `"Disabled"` when diagnostics have never been started (or have been stop
 
 ## What gets logged
 
-Each log line contains a UTC timestamp, the failing UDF's name, the exception type and message, and (if present) the stack trace. Diagnostic events never include worksheet values, cell references, or function arguments — only the function name and exception details are recorded. This holds even while diagnostics are enabled and even when the triggering call's inputs would otherwise be sensitive.
+Each log line contains a UTC timestamp, a `Source` field, the exception type and message, and (if present) the stack trace. `Source` is the internal C# method name that handled the call, not the registered Excel function name — by this codebase's convention that is the Excel name minus its leading `b`, so a failure in `bDayCount()` is logged with `Source: DayCount`. Diagnostic events never include worksheet values, cell references, or function arguments — only the source name and exception details are recorded. This holds even while diagnostics are enabled and even when the triggering call's inputs would otherwise be sensitive.
 
 ## Behavior under load
 
