@@ -26,6 +26,7 @@ public sealed class RegistrationTests
             "bIsBusinessDay",
             "bIsEndOfMonth",
             "bIsHoliday",
+            "bLoggingStatus",
             "bSchedule",
             "bTimeUnits",
             "bYearFraction"

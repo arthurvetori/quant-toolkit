@@ -32,4 +32,22 @@ public sealed class DescriptionTests
             }
         }
     }
+
+    [Fact]
+    public void EveryCommandHasANonEmptyDescription()
+    {
+        var exportedCommands = typeof(DiscoveryFunctions).Assembly.GetTypes()
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Static))
+            .Select(method => method.GetCustomAttribute<ExcelCommandAttribute>())
+            .Where(command => command is not null)
+            .ToArray();
+
+        Assert.NotEmpty(exportedCommands);
+
+        foreach (var command in exportedCommands)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(command!.Name));
+            Assert.False(string.IsNullOrWhiteSpace(command.Description));
+        }
+    }
 }

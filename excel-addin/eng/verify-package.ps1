@@ -52,4 +52,4 @@ foreach ($packedXll in $packedXlls) {
 Write-Host ('Verified x64 XLL: ' + ($x64Xlls.FullName -join ', '))
 Write-Host ('Verified native wrapper: ' + ($nativeDlls.FullName -join ', '))
 Write-Host ('Verified packed QuantLib resources: ' + ($packedXlls.FullName -join ', '))
-Write-Host 'Verified full Release test suite and exactly 17 approved Excel registrations.'
+Write-Host 'Verified full Release test suite and exactly 18 approved Excel functions plus 2 approved Excel commands.'
